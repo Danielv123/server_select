@@ -1,3 +1,5 @@
+require("mod-gui")
+
 local ceil = math.ceil
 local insert = table.insert
 
