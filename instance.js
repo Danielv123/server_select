@@ -8,6 +8,7 @@ class InstancePlugin extends plugin.BaseInstancePlugin {
 			id: this.instance.config.get("instance.id"),
 			name: this.instance.name,
 			game_port: this.instance.server.gamePort,
+			game_version: this.instance.server.version,
 			public_address: this.slave.config.get("slave.public_address"),
 		});
 

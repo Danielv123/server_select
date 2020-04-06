@@ -24,6 +24,7 @@ local function server_select_gui(player)
         this_instance = {
             id = clusterio_api.get_instance_id(),
             name = "<unknown>",
+            game_version = game.active_mods.base,
         }
     end
 
@@ -76,9 +77,17 @@ local function server_select_gui(player)
                 name = "server_select-instance-" .. instance.id,
                 caption = instance.name,
             }
+
+            if instance.game_version ~= this_instance.game_version then
+                button.enabled = false
+                button.style = "red_button"
+                button.tooltip = "On Factorio version " .. instance.game_version
+            end
+
             button.style.minimal_width = 72
             button.style.horizontal_align = "left"
             button.style.horizontally_stretchable = true
+
         end
     end
 end

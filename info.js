@@ -20,6 +20,14 @@ MasterConfigGroup.define({
 MasterConfigGroup.finalize();
 
 
+let instanceProperties = {
+	"id": { type: "integer" },
+	"name": { type: "string" },
+	"game_port": { type: "integer" },
+	"game_version": { type: "string" },
+	"public_address": { type: "string" },
+};
+
 module.exports = {
 	name: "server_select",
 	title: "Server Select",
@@ -34,12 +42,7 @@ module.exports = {
 			type: 'server_select:instance_started',
 			links: ['instance-slave', 'slave-master'],
 			forwardTo: 'master',
-			eventProperties: {
-				"id": { type: "integer" },
-				"name": { type: "string" },
-				"game_port": { type: "integer" },
-				"public_address": { type: "string" },
-			},
+			eventProperties: instanceProperties,
 		}),
 		instanceStopped: new link.Event({
 			type: 'server_select:instance_stopped',
@@ -59,13 +62,8 @@ module.exports = {
 					items: {
 						type: "object",
 						additionalProperties: false,
-						required: ["id", "name", "game_port", "public_address"],
-						properties: {
-							"id": { type: "integer" },
-							"name": { type: "string" },
-							"game_port": { type: "integer" },
-							"public_address": { type: "string" },
-						},
+						required: ["id", "name", "game_port", "game_version", "public_address"],
+						properties: instanceProperties,
 					},
 				},
 			},
@@ -81,13 +79,7 @@ module.exports = {
 						type: "object",
 						additionalProperties: false,
 						required: ["id"],
-						properties: {
-							"id": { type: "integer" },
-							"removed": { type: "boolean" },
-							"name": { type: "string" },
-							"game_port": { type: "integer" },
-							"public_address": { type: "string" },
-						},
+						properties: Object.assign({ "removed": { type: "boolean" }}, instanceProperties),
 					},
 				},
 			},
