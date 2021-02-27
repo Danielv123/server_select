@@ -1,8 +1,15 @@
-const plugin = require("lib/plugin");
-const luaTools = require("lib/luaTools");
+"use strict";
+const libPlugin = require("@clusterio/lib/plugin");
+const libLuaTools = require("@clusterio/lib/lua_tools");
 
 
-class InstancePlugin extends plugin.BaseInstancePlugin {
+class InstancePlugin extends libPlugin.BaseInstancePlugin {
+	async init() {
+		if (!this.instance.config.get("factorio.enable_save_patching")) {
+			throw new Error("server_select plugin requires save patching.");
+		}
+	}
+
 	async onStart() {
 		this.info.messages.instanceStarted.send(this.instance, {
 			id: this.instance.config.get("instance.id"),
@@ -13,8 +20,8 @@ class InstancePlugin extends plugin.BaseInstancePlugin {
 		});
 
 		let response = await this.info.messages.getInstances.send(this.instance);
-		let instancesJson = luaTools.escapeString(JSON.stringify(response.instances));
-		await this.instance.server.sendRcon(`/sc server_select.update_instances("${instancesJson}", true)`, true);
+		let instancesJson = libLuaTools.escapeString(JSON.stringify(response.instances));
+		await this.sendRcon(`/sc server_select.update_instances("${instancesJson}", true)`, true);
 	}
 
 	onExit() {
@@ -24,8 +31,8 @@ class InstancePlugin extends plugin.BaseInstancePlugin {
 	}
 
 	async updateInstancesEventHandler(message) {
-		let instancesJson = luaTools.escapeString(JSON.stringify(message.data.instances));
-		await this.instance.server.sendRcon(`/sc server_select.update_instances("${instancesJson}")`, true);
+		let instancesJson = libLuaTools.escapeString(JSON.stringify(message.data.instances));
+		await this.sendRcon(`/sc server_select.update_instances("${instancesJson}")`, true);
 	}
 }
 

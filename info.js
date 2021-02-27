@@ -1,8 +1,10 @@
-const link = require("lib/link");
-const config = require("lib/config");
+"use strict";
+const libLink = require("@clusterio/lib/link");
+const libConfig = require("@clusterio/lib/config");
 
-class MasterConfigGroup extends config.PluginConfigGroup {}
-MasterConfigGroup.groupName = "server_select"
+class MasterConfigGroup extends libConfig.PluginConfigGroup {}
+MasterConfigGroup.defaultAccess = ["master", "slave", "control"];
+MasterConfigGroup.groupName = "server_select";
 /*MasterConfigGroup.define({
 	name: 'disable_shout',
 	title: "Disable Shout Command",
@@ -32,30 +34,29 @@ module.exports = {
 	name: "server_select",
 	title: "Server Select",
 	description: "In-game GUI for connecting to other server in the cluster.",
-	version: "2.0.0-alpha",
 	masterEntrypoint: "master",
 	instanceEntrypoint: "instance",
 	MasterConfigGroup,
 
 	messages: {
-		instanceStarted: new link.Event({
-			type: 'server_select:instance_started',
-			links: ['instance-slave', 'slave-master'],
-			forwardTo: 'master',
+		instanceStarted: new libLink.Event({
+			type: "server_select:instance_started",
+			links: ["instance-slave", "slave-master"],
+			forwardTo: "master",
 			eventProperties: instanceProperties,
 		}),
-		instanceStopped: new link.Event({
-			type: 'server_select:instance_stopped',
-			links: ['instance-slave', 'slave-master'],
-			forwardTo: 'master',
+		instanceStopped: new libLink.Event({
+			type: "server_select:instance_stopped",
+			links: ["instance-slave", "slave-master"],
+			forwardTo: "master",
 			eventProperties: {
 				"id": { type: "integer" },
 			},
 		}),
-		getInstances: new link.Request({
-			type: 'server_select:get_instances',
-			links: ['instance-slave', 'slave-master'],
-			forwardTo: 'master',
+		getInstances: new libLink.Request({
+			type: "server_select:get_instances",
+			links: ["instance-slave", "slave-master"],
+			forwardTo: "master",
 			responseProperties: {
 				"instances": {
 					type: "array",
@@ -68,10 +69,10 @@ module.exports = {
 				},
 			},
 		}),
-		updateInstances: new link.Event({
-			type: 'server_select:update_instances',
-			links: ['master-slave', 'slave-instance'],
-			broadcastTo: 'instance',
+		updateInstances: new libLink.Event({
+			type: "server_select:update_instances",
+			links: ["master-slave", "slave-instance"],
+			broadcastTo: "instance",
 			eventProperties: {
 				"instances": {
 					type: "array",
@@ -79,10 +80,10 @@ module.exports = {
 						type: "object",
 						additionalProperties: false,
 						required: ["id"],
-						properties: Object.assign({ "removed": { type: "boolean" }}, instanceProperties),
+						properties: { "removed": { type: "boolean" }, ...instanceProperties },
 					},
 				},
 			},
 		}),
 	},
-}
+};
