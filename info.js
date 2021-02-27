@@ -5,20 +5,6 @@ const libConfig = require("@clusterio/lib/config");
 class MasterConfigGroup extends libConfig.PluginConfigGroup {}
 MasterConfigGroup.defaultAccess = ["master", "slave", "control"];
 MasterConfigGroup.groupName = "server_select";
-/*MasterConfigGroup.define({
-	name: 'disable_shout',
-	title: "Disable Shout Command",
-	description: "Disable the /shout command globally",
-	type: 'boolean',
-	initial_value: false,
-});
-MasterConfigGroup.define({
-	name: 'global_chat',
-	title: "Enable Global chat",
-	description: "Mirrors all chat between all instance",
-	type: 'boolean',
-	initial_value: false,
-});*/
 MasterConfigGroup.finalize();
 
 

@@ -1,7 +1,7 @@
 "use strict";
 const libPlugin = require("@clusterio/lib/plugin");
 
-class MasterPlugin extends libPlugin.BaseMasterPlugin{
+class MasterPlugin extends libPlugin.BaseMasterPlugin {
 	async init() {
 		this.instances = new Map();
 	}
