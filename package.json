@@ -1,6 +1,6 @@
 {
   "name": "@hornwitser/server_select",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "Clusterio plugin adding an in-game server select menu",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

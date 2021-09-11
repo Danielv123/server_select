@@ -3,13 +3,14 @@ local mod_gui = require("mod-gui")
 
 
 local function on_server_startup()
-    print("server_select startup")
-    print(type(global.server_select))
     if not global.server_select then
-        global.server_select = {
-            instances = {},
-            guis = {},
-        }
+        global.server_select = {}
+    end
+    if not global.server_select.instances then
+        global.server_select.instances = {}
+    end
+    if not global.server_select.guis then
+        global.server_select.guis = {}
     end
 end
 
