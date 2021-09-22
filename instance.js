@@ -8,6 +8,33 @@ class InstancePlugin extends libPlugin.BaseInstancePlugin {
 		if (!this.instance.config.get("factorio.enable_save_patching")) {
 			throw new Error("server_select plugin requires save patching.");
 		}
+
+		this.pendingCommands = [];
+		this.currentlySending = false;
+	}
+
+	async sendPendingRcon() {
+		this.currentlySending = true;
+		while (this.pendingCommands.length) {
+			let task = this.pendingCommands.shift();
+			try {
+				let result = await this.sendRcon(task.command, task.expectEmpty);
+				task.resolve(result);
+			} catch (err) {
+				task.reject(err);
+			}
+		}
+		this.currentlySending = false;
+	}
+
+	async serialRcon(command, expectEmpty = false) {
+		let promise = new Promise((resolve, reject) => {
+			this.pendingCommands.push({resolve, reject, command, expectEmpty});
+		});
+		if (!this.currentlySending) {
+			this.sendPendingRcon();
+		}
+		return await promise;
 	}
 
 	async getInstanceRequestHandler() {
@@ -25,7 +52,7 @@ class InstancePlugin extends libPlugin.BaseInstancePlugin {
 	async updateList() {
 		let response = await this.info.messages.getInstances.send(this.instance);
 		let instancesJson = libLuaTools.escapeString(JSON.stringify(response.instances));
-		await this.sendRcon(`/sc server_select.update_instances("${instancesJson}", true)`, true);
+		await this.serialRcon(`/sc server_select.update_instances("${instancesJson}", true)`, true);
 	}
 
 	onMasterConnectionEvent(event) {
@@ -40,7 +67,7 @@ class InstancePlugin extends libPlugin.BaseInstancePlugin {
 
 	async updateInstancesEventHandler(message) {
 		let instancesJson = libLuaTools.escapeString(JSON.stringify(message.data.instances));
-		await this.sendRcon(`/sc server_select.update_instances("${instancesJson}", ${message.data.full})`, true);
+		await this.serialRcon(`/sc server_select.update_instances("${instancesJson}", ${message.data.full})`, true);
 	}
 }
 
