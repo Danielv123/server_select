@@ -47,10 +47,12 @@ local function server_select_gui(player)
         table.insert(instances, instance)
     end
 
-    local column_count = math.ceil(#instances / 10)
+    table.sort(instances, function(a, b) return a.name < b.name end)
+
+    local row_count = math.ceil(#instances / math.ceil(#instances / 10))
     local columns = {}
     for index, instance in ipairs(instances) do
-        local column_index = 1 + ((index-1) % column_count)
+        local column_index = 1 + math.floor((index-1) / row_count)
         if not columns[column_index] then
             columns[column_index] = {}
         end
