@@ -94,7 +94,7 @@ local function server_select_gui(player)
 end
 
 local function toggle_server_select_gui(player_index)
-    local player = game.players[player_index]
+    local player = game.get_player(player_index)
 
     if global.server_select.guis[player_index] then
         global.server_select.guis[player_index].destroy()
@@ -107,7 +107,7 @@ local function toggle_server_select_gui(player_index)
 end
 
 local function checkbutton(e)
-    local player = game.players[e.player_index]
+    local player = game.get_player(e.player_index)
     local anchorpoint = mod_gui.get_button_flow(player)
 
     local button = anchorpoint["server_select-button"]
@@ -142,7 +142,7 @@ local function on_gui_click(event)
         local instance = global.server_select.instances[instance_id]
 
         if instance then
-            game.players[event.player_index].connect_to_server {
+            game.get_player(event.player_index).connect_to_server {
                 address = instance.public_address .. ":" .. instance.game_port,
                 name = instance.name
             }
@@ -176,11 +176,11 @@ function server_select.update_instances(data, full)
         end
     end
 
-    -- Update open server listopen server lists
+    -- Update open server lists
     for player_index, gui in pairs(global.server_select.guis) do
         gui.destroy()
         global.server_select.guis[player_index] = nil
-        server_select_gui(game.players[player_index])
+        server_select_gui(game.get_player(player_index))
     end
 end
 
