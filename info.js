@@ -4,12 +4,27 @@ const { libConfig, libLink } = require("@clusterio/lib");
 class MasterConfigGroup extends libConfig.PluginConfigGroup {}
 MasterConfigGroup.defaultAccess = ["master", "slave", "control"];
 MasterConfigGroup.groupName = "server_select";
+MasterConfigGroup.define({
+	name: "show_offline_instances",
+	title: "Show Offline Instances",
+	description: "Show instances that are not running in the server list.",
+	type: "boolean",
+	initial_value: true,
+});
+MasterConfigGroup.define({
+	name: "show_unknown_instances",
+	title: "Show Unknown Instances",
+	description: "Show instances with an unknown status in the server list.",
+	type: "boolean",
+	initial_value: true,
+});
 MasterConfigGroup.finalize();
 
 
 let instanceProperties = {
 	"id": { type: "integer" },
 	"name": { type: "string" },
+	"status": { type: "string" },
 	"game_port": { type: "integer" },
 	"game_version": { type: "string" },
 	"public_address": { type: "string" },
@@ -24,19 +39,18 @@ module.exports = {
 	MasterConfigGroup,
 
 	messages: {
-		instanceStarted: new libLink.Event({
-			type: "server_select:instance_started",
-			links: ["instance-slave", "slave-master"],
-			forwardTo: "master",
-			eventProperties: instanceProperties,
-		}),
-		instanceStopped: new libLink.Event({
-			type: "server_select:instance_stopped",
-			links: ["instance-slave", "slave-master"],
-			forwardTo: "master",
-			eventProperties: {
-				"id": { type: "integer" },
-			},
+		getInstance: new libLink.Request({
+			type: "server_select:get_instance",
+			links: ["master-slave", "slave-instance"],
+			forwardTo: "instance",
+			responseProperties: {
+				"instance": {
+					type: "object",
+					additionalProperties: false,
+					required: Object.keys(instanceProperties),
+					properties: instanceProperties,
+				}
+			}
 		}),
 		getInstances: new libLink.Request({
 			type: "server_select:get_instances",
@@ -48,7 +62,7 @@ module.exports = {
 					items: {
 						type: "object",
 						additionalProperties: false,
-						required: ["id", "name", "game_port", "game_version", "public_address"],
+						required: ["id", "name", "status"],
 						properties: instanceProperties,
 					},
 				},
@@ -68,6 +82,7 @@ module.exports = {
 						properties: { "removed": { type: "boolean" }, ...instanceProperties },
 					},
 				},
+				"full": { type: "boolean" },
 			},
 		}),
 	},

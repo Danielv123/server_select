@@ -34,7 +34,7 @@ local function server_select_gui(player)
         type = "frame",
         name = "server_select-frame",
         direction = "horizontal",
-        caption = 'You are on "' .. this_instance.name .. '". Where to go now?',
+        caption = 'Server Select',
         style = mod_gui.frame_style,
     }
     global.server_select.guis[player.index] = gui
@@ -42,9 +42,7 @@ local function server_select_gui(player)
 
     local instances = {}
     for id, instance in pairs(global.server_select.instances) do
-        if id ~= this_instance.id then
-            table.insert(instances, instance)
-        end
+        table.insert(instances, instance)
     end
 
     local column_count = math.ceil(#instances / 10)
@@ -79,7 +77,24 @@ local function server_select_gui(player)
                 caption = instance.name,
             }
 
-            if instance.game_version ~= this_instance.game_version then
+            if instance.id == this_instance.id then
+                button.enabled = false
+                button.style = "green_button"
+                button.tooltip = "You are here"
+
+            elseif instance.status == "unknown" then
+                button.enabled = instance.game_port ~= nil
+                button.style.font_color = { r = 0.65 }
+                button.style.hovered_font_color = { r = 0.65 }
+                button.style.clicked_font_color = { r = 0.65 }
+                button.style.disabled_font_color = { r = 0.75, g = 0.1, b = 0.1 }
+                button.tooltip = "Unknown status for this server"
+
+            elseif instance.status ~= "running" then
+                button.enabled = false
+                button.tooltip = "This server is offline"
+
+            elseif instance.game_version ~= this_instance.game_version then
                 button.enabled = false
                 button.style = "red_button"
                 button.tooltip = "On Factorio version " .. instance.game_version
@@ -141,7 +156,7 @@ local function on_gui_click(event)
         local instance_id = tonumber(match)
         local instance = global.server_select.instances[instance_id]
 
-        if instance then
+        if instance and instance.game_port and instance.public_address then
             game.get_player(event.player_index).connect_to_server {
                 address = instance.public_address .. ":" .. instance.game_port,
                 name = instance.name
