@@ -24,9 +24,11 @@ local function server_select_gui(player)
     if not this_instance then
         this_instance = {
             id = clusterio_api.get_instance_id(),
-            name = "<unknown>",
+            name = clusterio_api.get_instance_name(),
+            status = "running",
             game_version = game.active_mods.base,
         }
+        global.server_select.instances[this_instance.id] = this_instance
     end
 
     local frame_flow = mod_gui.get_frame_flow(player)
