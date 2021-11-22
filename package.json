@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/Hornwitser/server_select#readme",
   "peerDependencies": {
-    "@clusterio/lib": "^2.0.0-alpha.4"
+    "@clusterio/lib": "^2.0.0-alpha.0"
   },
   "devDependencies": {
     "@clusterio/web_ui": "^2.0.0-alpha.5",
