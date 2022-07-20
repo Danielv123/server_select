@@ -9,14 +9,12 @@ module.exports = (env = {}) => merge(common(env), {
 	context: __dirname,
 	entry: "./web/index.jsx",
 	output: {
-		filename: "bundle.js",
 		path: path.resolve(__dirname, "dist", "web"),
 	},
 	plugins: [
 		new webpack.container.ModuleFederationPlugin({
 			name: "server_select",
 			library: { type: "var", name: "plugin_server_select" },
-			filename: "remoteEntry.js",
 			exposes: {
 				"./info": "./info.js",
 				"./package.json": "./package.json",
