@@ -66,6 +66,9 @@ class InstancePlugin extends libPlugin.BaseInstancePlugin {
 	}
 
 	async updateInstancesEventHandler(message) {
+		if (this.instance.status !== "running") {
+			return;
+		}
 		let instancesJson = libLuaTools.escapeString(JSON.stringify(message.data.instances));
 		await this.serialRcon(`/sc server_select.update_instances("${instancesJson}", ${message.data.full})`, true);
 	}
