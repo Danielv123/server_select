@@ -36,7 +36,7 @@ class MasterPlugin extends libPlugin.BaseMasterPlugin {
 	}
 
 	shouldShowInstance(instance) {
-		if (instance.status === "unassigned") {
+		if (["unassigned", "deleted"].includes(instance.status)) {
 			return false;
 		}
 		if (instance.status === "unknown") {
