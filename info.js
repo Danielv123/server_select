@@ -1,24 +1,24 @@
 "use strict";
 const { libConfig, libLink } = require("@clusterio/lib");
 
-class MasterConfigGroup extends libConfig.PluginConfigGroup {}
-MasterConfigGroup.defaultAccess = ["master", "slave", "control"];
-MasterConfigGroup.groupName = "server_select";
-MasterConfigGroup.define({
+class ControllerConfigGroup extends libConfig.PluginConfigGroup {}
+ControllerConfigGroup.defaultAccess = ["controller", "host", "control"];
+ControllerConfigGroup.groupName = "server_select";
+ControllerConfigGroup.define({
 	name: "show_offline_instances",
 	title: "Show Offline Instances",
 	description: "Show instances that are not running in the server list.",
 	type: "boolean",
 	initial_value: true,
 });
-MasterConfigGroup.define({
+ControllerConfigGroup.define({
 	name: "show_unknown_instances",
 	title: "Show Unknown Instances",
 	description: "Show instances with an unknown status in the server list.",
 	type: "boolean",
 	initial_value: true,
 });
-MasterConfigGroup.finalize();
+ControllerConfigGroup.finalize();
 
 
 let instanceProperties = {
@@ -34,14 +34,14 @@ module.exports = {
 	name: "server_select",
 	title: "Server Select",
 	description: "In-game GUI for connecting to other server in the cluster.",
-	masterEntrypoint: "master",
+	controllerEntrypoint: "controller",
 	instanceEntrypoint: "instance",
-	MasterConfigGroup,
+	ControllerConfigGroup,
 
 	messages: {
 		getInstance: new libLink.Request({
 			type: "server_select:get_instance",
-			links: ["master-slave", "slave-instance"],
+			links: ["controller-host", "host-instance"],
 			forwardTo: "instance",
 			responseProperties: {
 				"instance": {
@@ -54,8 +54,8 @@ module.exports = {
 		}),
 		getInstances: new libLink.Request({
 			type: "server_select:get_instances",
-			links: ["instance-slave", "slave-master"],
-			forwardTo: "master",
+			links: ["instance-host", "host-controller"],
+			forwardTo: "controller",
 			responseProperties: {
 				"instances": {
 					type: "array",
@@ -70,7 +70,7 @@ module.exports = {
 		}),
 		updateInstances: new libLink.Event({
 			type: "server_select:update_instances",
-			links: ["master-slave", "slave-instance"],
+			links: ["controller-host", "host-instance"],
 			broadcastTo: "instance",
 			eventProperties: {
 				"instances": {

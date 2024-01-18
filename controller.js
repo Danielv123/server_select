@@ -1,11 +1,11 @@
 "use strict";
 const libPlugin = require("@clusterio/lib/plugin");
 
-class MasterPlugin extends libPlugin.BaseMasterPlugin {
+class ControllerPlugin extends libPlugin.BaseControllerPlugin {
 	async init() {
 		this.instances = new Map();
-		if (this.master.config.get("server_select.show_unknown_instances")) {
-			for (let [instanceId, instance] of this.master.instances) {
+		if (this.controller.config.get("server_select.show_unknown_instances")) {
+			for (let [instanceId, instance] of this.controller.instances) {
 				if (instance.status === "unknown") {
 					this.instances.set(instanceId, {
 						"id": instanceId,
@@ -16,8 +16,8 @@ class MasterPlugin extends libPlugin.BaseMasterPlugin {
 			}
 		}
 
-		// No master config changed hook :(
-		this.master.config.on("fieldChanged", (group, field, prev) => {
+		// No controller config changed hook :(
+		this.controller.config.on("fieldChanged", (group, field, prev) => {
 			if (
 				group.name === "server_select"
 				&& ["show_unknown_instances", "show_offline_instances"].includes(field)
@@ -40,25 +40,25 @@ class MasterPlugin extends libPlugin.BaseMasterPlugin {
 			return false;
 		}
 		if (instance.status === "unknown") {
-			return this.master.config.get("server_select.show_unknown_instances");
+			return this.controller.config.get("server_select.show_unknown_instances");
 		}
 		if (instance.status === "running") {
 			return true;
 		}
-		return this.master.config.get("server_select.show_offline_instances");
+		return this.controller.config.get("server_select.show_offline_instances");
 	}
 
 	async updateInstanceData(instance) {
 		let instanceId = instance.config.get("instance.id");
 		if (instance.status === "running") {
-			let slaveConnection = this.master.wsServer.slaveConnections.get(
-				instance.config.get("instance.assigned_slave")
+			let hostConnection = this.controller.wsServer.hostConnections.get(
+				instance.config.get("instance.assigned_host")
 			);
-			if (!slaveConnection) { // Should be impossible
+			if (!hostConnection) { // Should be impossible
 				return;
 			}
 
-			let response = await this.info.messages.getInstance.send(slaveConnection, { instance_id: instanceId });
+			let response = await this.info.messages.getInstance.send(hostConnection, { instance_id: instanceId });
 			this.instances.set(instanceId, response.instance);
 		}
 
@@ -78,11 +78,11 @@ class MasterPlugin extends libPlugin.BaseMasterPlugin {
 		let instanceId = instance.config.get("instance.id");
 		if (this.shouldShowInstance(instance)) {
 			let instanceData = await this.updateInstanceData(instance);
-			this.broadcastEventToSlaves(this.info.messages.updateInstances, { instances: [instanceData], full: false });
+			this.broadcastEventToHosts(this.info.messages.updateInstances, { instances: [instanceData], full: false });
 
 		} else {
 			this.instances.delete(instanceId);
-			this.broadcastEventToSlaves(this.info.messages.updateInstances, {
+			this.broadcastEventToHosts(this.info.messages.updateInstances, {
 				instances: [{ id: instance.config.get("instance.id"), removed: true }],
 				full: false,
 			});
@@ -90,7 +90,7 @@ class MasterPlugin extends libPlugin.BaseMasterPlugin {
 	}
 
 	async updateInstances() {
-		for (let [instanceId, instance] of this.master.instances) {
+		for (let [instanceId, instance] of this.controller.instances) {
 			if (this.shouldShowInstance(instance)) {
 				if (!this.instances.has(instanceId)) {
 					await this.updateInstanceData(instance);
@@ -100,7 +100,7 @@ class MasterPlugin extends libPlugin.BaseMasterPlugin {
 			}
 		}
 
-		this.broadcastEventToSlaves(this.info.messages.updateInstances, {
+		this.broadcastEventToHosts(this.info.messages.updateInstances, {
 			instances: [...this.instances.values()],
 			full: true,
 		});
@@ -108,5 +108,5 @@ class MasterPlugin extends libPlugin.BaseMasterPlugin {
 }
 
 module.exports = {
-	MasterPlugin,
+	ControllerPlugin,
 };

@@ -44,7 +44,7 @@ class InstancePlugin extends libPlugin.BaseInstancePlugin {
 			status: this.instance.status,
 			game_port: this.instance.server.gamePort,
 			game_version: this.instance.server.version,
-			public_address: this.slave.config.get("slave.public_address"),
+			public_address: this.host.config.get("host.public_address"),
 		};
 		return { instance };
 	}
@@ -55,7 +55,7 @@ class InstancePlugin extends libPlugin.BaseInstancePlugin {
 		await this.serialRcon(`/sc server_select.update_instances("${instancesJson}", true)`, true);
 	}
 
-	onMasterConnectionEvent(event) {
+	onControllerConnectionEvent(event) {
 		if (event === "connect" && this.instance.status === "running") {
 			this.updateList().catch(err => this.logger.error(`Unexpected error updating server list:\n${err.stack}`));
 		}
