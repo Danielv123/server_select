@@ -1,7 +1,7 @@
 "use strict";
-const libPlugin = require("@clusterio/lib/plugin");
+const lib = require("@clusterio/lib");
 
-class ControllerPlugin extends libPlugin.BaseControllerPlugin {
+class ControllerPlugin extends lib.BaseControllerPlugin {
 	async init() {
 		this.instances = new Map();
 		if (this.controller.config.get("server_select.show_unknown_instances")) {

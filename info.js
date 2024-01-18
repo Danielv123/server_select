@@ -1,7 +1,7 @@
 "use strict";
-const { libConfig, libLink } = require("@clusterio/lib");
+const lib = require("@clusterio/lib");
 
-class ControllerConfigGroup extends libConfig.PluginConfigGroup {}
+class ControllerConfigGroup extends lib.PluginConfigGroup {}
 ControllerConfigGroup.defaultAccess = ["controller", "host", "control"];
 ControllerConfigGroup.groupName = "server_select";
 ControllerConfigGroup.define({
@@ -39,7 +39,7 @@ module.exports = {
 	ControllerConfigGroup,
 
 	messages: {
-		getInstance: new libLink.Request({
+		getInstance: new lib.Request({
 			type: "server_select:get_instance",
 			links: ["controller-host", "host-instance"],
 			forwardTo: "instance",
@@ -52,7 +52,7 @@ module.exports = {
 				}
 			}
 		}),
-		getInstances: new libLink.Request({
+		getInstances: new lib.Request({
 			type: "server_select:get_instances",
 			links: ["instance-host", "host-controller"],
 			forwardTo: "controller",
@@ -68,7 +68,7 @@ module.exports = {
 				},
 			},
 		}),
-		updateInstances: new libLink.Event({
+		updateInstances: new lib.Event({
 			type: "server_select:update_instances",
 			links: ["controller-host", "host-instance"],
 			broadcastTo: "instance",
