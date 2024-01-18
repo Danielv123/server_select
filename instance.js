@@ -1,8 +1,15 @@
 "use strict";
 const lib = require("@clusterio/lib");
+const { BaseInstancePlugin } = require("@clusterio/host");
+
+const {
+	GetInstanceRequest,
+	GetInstancesRequest,
+	UpdateInstancesEvent,
+} = require("./info");
 
 
-class InstancePlugin extends lib.BaseInstancePlugin {
+class InstancePlugin extends BaseInstancePlugin {
 	async init() {
 		if (!this.instance.config.get("factorio.enable_save_patching")) {
 			throw new Error("server_select plugin requires save patching.");
@@ -10,6 +17,8 @@ class InstancePlugin extends lib.BaseInstancePlugin {
 
 		this.pendingCommands = [];
 		this.currentlySending = false;
+		this.instance.handle(GetInstanceRequest, this.handleGetInstanceRequest.bind(this));
+		this.instance.handle(UpdateInstancesEvent, this.handleUpdateInstancesEvent.bind(this));
 	}
 
 	async sendPendingRcon() {
@@ -36,8 +45,8 @@ class InstancePlugin extends lib.BaseInstancePlugin {
 		return await promise;
 	}
 
-	async getInstanceRequestHandler() {
-		let instance = {
+	async handleGetInstanceRequest() {
+		return {
 			id: this.instance.config.get("instance.id"),
 			name: this.instance.name,
 			status: this.instance.status,
@@ -45,12 +54,11 @@ class InstancePlugin extends lib.BaseInstancePlugin {
 			game_version: this.instance.server.version,
 			public_address: this.host.config.get("host.public_address"),
 		};
-		return { instance };
 	}
 
 	async updateList() {
-		let response = await this.info.messages.getInstances.send(this.instance);
-		let instancesJson = lib.escapeString(JSON.stringify(response.instances));
+		let instances = await this.instance.sendTo("controller", new GetInstancesRequest());
+		let instancesJson = lib.escapeString(JSON.stringify(instances));
 		await this.serialRcon(`/sc server_select.update_instances("${instancesJson}", true)`, true);
 	}
 
@@ -64,12 +72,12 @@ class InstancePlugin extends lib.BaseInstancePlugin {
 		await this.updateList();
 	}
 
-	async updateInstancesEventHandler(message) {
+	async handleUpdateInstancesEvent(event) {
 		if (this.instance.status !== "running") {
 			return;
 		}
-		let instancesJson = lib.escapeString(JSON.stringify(message.data.instances));
-		await this.serialRcon(`/sc server_select.update_instances("${instancesJson}", ${message.data.full})`, true);
+		let instancesJson = lib.escapeString(JSON.stringify(event.instances));
+		await this.serialRcon(`/sc server_select.update_instances("${instancesJson}", ${event.full})`, true);
 	}
 }
 

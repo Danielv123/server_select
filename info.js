@@ -1,27 +1,8 @@
 "use strict";
-const lib = require("@clusterio/lib");
 
-class ControllerConfigGroup extends lib.PluginConfigGroup {}
-ControllerConfigGroup.defaultAccess = ["controller", "host", "control"];
-ControllerConfigGroup.groupName = "server_select";
-ControllerConfigGroup.define({
-	name: "show_offline_instances",
-	title: "Show Offline Instances",
-	description: "Show instances that are not running in the server list.",
-	type: "boolean",
-	initial_value: true,
-});
-ControllerConfigGroup.define({
-	name: "show_unknown_instances",
-	title: "Show Unknown Instances",
-	description: "Show instances with an unknown status in the server list.",
-	type: "boolean",
-	initial_value: true,
-});
-ControllerConfigGroup.finalize();
+const { plainJson } = require("@clusterio/lib");
 
-
-let instanceProperties = {
+const instanceProperties = {
 	"id": { type: "integer" },
 	"name": { type: "string" },
 	"status": { type: "string" },
@@ -30,60 +11,102 @@ let instanceProperties = {
 	"public_address": { type: "string" },
 };
 
-module.exports = {
+class GetInstanceRequest {
+	static type = "request";
+	static src = "controller";
+	static dst = "instance";
+	static plugin = "server_select";
+	static Response = plainJson({
+		type: "object",
+		additionalProperties: false,
+		required: Object.keys(instanceProperties),
+		properties: instanceProperties,
+	});
+}
+
+class GetInstancesRequest {
+	static type = "request";
+	static src = "instance";
+	static dst = "controller";
+	static plugin = "server_select";
+	static Response = plainJson({
+		type: "array",
+		items: {
+			type: "object",
+			additionalProperties: false,
+			required: ["id", "name", "status"],
+			properties: instanceProperties,
+		},
+	});
+}
+
+class UpdateInstancesEvent {
+	static type = "event";
+	static src = "controller";
+	static dst = "instance";
+	static plugin = "server_select";
+
+	constructor(instances, full) {
+		this.instances = instances;
+		this.full = full;
+	}
+
+	static jsonSchema = {
+		type: "object",
+		required: ["instances", "full"],
+		properties: {
+			"instances": {
+				type: "array",
+				items: {
+					type: "object",
+					additionalProperties: false,
+					required: ["id"],
+					properties: {
+						"removed": { type: "boolean" },
+						...instanceProperties
+					},
+				},
+			},
+			"full": { type: "boolean" },
+		},
+	};
+
+	static fromJSON(json) {
+		return new this(json.instances, json.full);
+	}
+}
+
+const plugin = {
 	name: "server_select",
 	title: "Server Select",
 	description: "In-game GUI for connecting to other server in the cluster.",
 	controllerEntrypoint: "controller",
 	instanceEntrypoint: "instance",
-	ControllerConfigGroup,
-
-	messages: {
-		getInstance: new lib.Request({
-			type: "server_select:get_instance",
-			links: ["controller-host", "host-instance"],
-			forwardTo: "instance",
-			responseProperties: {
-				"instance": {
-					type: "object",
-					additionalProperties: false,
-					required: Object.keys(instanceProperties),
-					properties: instanceProperties,
-				}
-			}
-		}),
-		getInstances: new lib.Request({
-			type: "server_select:get_instances",
-			links: ["instance-host", "host-controller"],
-			forwardTo: "controller",
-			responseProperties: {
-				"instances": {
-					type: "array",
-					items: {
-						type: "object",
-						additionalProperties: false,
-						required: ["id", "name", "status"],
-						properties: instanceProperties,
-					},
-				},
-			},
-		}),
-		updateInstances: new lib.Event({
-			type: "server_select:update_instances",
-			links: ["controller-host", "host-instance"],
-			broadcastTo: "instance",
-			eventProperties: {
-				"instances": {
-					type: "array",
-					items: {
-						type: "object",
-						additionalProperties: false,
-						required: ["id"],
-						properties: { "removed": { type: "boolean" }, ...instanceProperties },
-					},
-				},
-				"full": { type: "boolean" },
-			},
-		}),
+	controllerConfigFields: {
+		"server_select.show_offline_instances": {
+			title: "Show Offline Instances",
+			description: "Show instances that are not running in the server list.",
+			type: "boolean",
+			initialValue: true,
+		},
+		"server_select.show_unknown_instances": {
+			title: "Show Unknown Instances",
+			description: "Show instances with an unknown status in the server list.",
+			type: "boolean",
+			initialValue: true,
+		},
 	},
+
+	messages: [
+		GetInstanceRequest,
+		GetInstancesRequest,
+		UpdateInstancesEvent,
+	],
 };
+
+module.exports = {
+	plugin,
+	GetInstanceRequest,
+	GetInstancesRequest,
+	UpdateInstancesEvent,
+}

@@ -1,7 +1,8 @@
 {
   "name": "@hornwitser/server_select",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0-alpha.5",
   "description": "Clusterio plugin adding an in-game server select menu",
+  "main": "info.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint \"*.js\"",
@@ -22,15 +23,15 @@
   },
   "homepage": "https://github.com/Hornwitser/server_select#readme",
   "peerDependencies": {
-    "@clusterio/lib": "^2.0.0-alpha.13"
+    "@clusterio/lib": "^2.0.0-alpha.14"
   },
   "devDependencies": {
-    "@clusterio/lib": "^2.0.0-alpha.13",
-    "@clusterio/web_ui": "^2.0.0-alpha.13",
-    "eslint": "^7.13.0",
-    "webpack": "^5.4.0",
-    "webpack-cli": "^4.2.0",
-    "webpack-merge": "^5.3.0"
+    "@clusterio/lib": "^2.0.0-alpha.14",
+    "@clusterio/web_ui": "^2.0.0-alpha.14",
+    "eslint": "^8.45.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-merge": "^5.9.0"
   },
   "publishConfig": {
     "access": "public"

@@ -1,7 +1,13 @@
 "use strict";
-const lib = require("@clusterio/lib");
+const { BaseControllerPlugin } = require("@clusterio/controller");
 
-class ControllerPlugin extends lib.BaseControllerPlugin {
+const {
+	GetInstanceRequest,
+	GetInstancesRequest,
+	UpdateInstancesEvent,
+} = require("./info");
+
+class ControllerPlugin extends BaseControllerPlugin {
 	async init() {
 		this.instances = new Map();
 		if (this.controller.config.get("server_select.show_unknown_instances")) {
@@ -15,24 +21,16 @@ class ControllerPlugin extends lib.BaseControllerPlugin {
 				}
 			}
 		}
-
-		// No controller config changed hook :(
-		this.controller.config.on("fieldChanged", (group, field, prev) => {
-			if (
-				group.name === "server_select"
-				&& ["show_unknown_instances", "show_offline_instances"].includes(field)
-			) {
-				this.updateInstances().catch(
-					err => this.logger.error(`Unexpected error updating instances:\n${err.stack}`)
-				)
-			}
-		});
+		this.controller.handle(GetInstancesRequest, () => [...this.instances.values()]);
 	}
 
-	async getInstancesRequestHandler(message) {
-		return {
-			instances: [...this.instances.values()],
-		};
+	async onControllerConfigFieldChanged(field, curr, prev) {
+		if (
+			field === "server_select.show_unknown_instances"
+			|| field === "server_select.show_offline_instances"
+		) {
+			await this.updateInstances()
+		}
 	}
 
 	shouldShowInstance(instance) {
@@ -58,8 +56,8 @@ class ControllerPlugin extends lib.BaseControllerPlugin {
 				return;
 			}
 
-			let response = await this.info.messages.getInstance.send(hostConnection, { instance_id: instanceId });
-			this.instances.set(instanceId, response.instance);
+			let currentData = await this.controller.sendTo({ instanceId }, new GetInstanceRequest());
+			this.instances.set(instanceId, currentData);
 		}
 
 		let instanceData = this.instances.get(instanceId);
@@ -78,14 +76,18 @@ class ControllerPlugin extends lib.BaseControllerPlugin {
 		let instanceId = instance.config.get("instance.id");
 		if (this.shouldShowInstance(instance)) {
 			let instanceData = await this.updateInstanceData(instance);
-			this.broadcastEventToHosts(this.info.messages.updateInstances, { instances: [instanceData], full: false });
+			this.controller.sendTo("allInstances",
+				new UpdateInstancesEvent([instanceData], false),
+			);
 
 		} else {
 			this.instances.delete(instanceId);
-			this.broadcastEventToHosts(this.info.messages.updateInstances, {
-				instances: [{ id: instance.config.get("instance.id"), removed: true }],
-				full: false,
-			});
+			this.controller.sendTo("allInstances",
+				new UpdateInstancesEvent(
+					[{ id: instance.config.get("instance.id"), removed: true }],
+					false,
+				),
+			);
 		}
 	}
 
@@ -100,10 +102,9 @@ class ControllerPlugin extends lib.BaseControllerPlugin {
 			}
 		}
 
-		this.broadcastEventToHosts(this.info.messages.updateInstances, {
-			instances: [...this.instances.values()],
-			full: true,
-		});
+		this.controller.sendTo("allInstances",
+			new UpdateInstancesEvent([...this.instances.values()], true)
+		);
 	}
 }
 

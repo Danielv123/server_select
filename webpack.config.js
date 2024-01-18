@@ -16,7 +16,7 @@ module.exports = (env = {}) => merge(common(env), {
 			name: "server_select",
 			library: { type: "var", name: "plugin_server_select" },
 			exposes: {
-				"./info": "./info.js",
+				"./": "./info.js",
 				"./package.json": "./package.json",
 			},
 			shared: {
