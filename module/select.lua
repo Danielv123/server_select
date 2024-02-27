@@ -25,6 +25,8 @@ end
 -- Perform fuzzy text comparison
 local function search_matches(instance_name, search_term)
     if search_term == "" then return true end
+    search_term = search_term:lower()
+    instance_name = instance_name:lower()
     local search_index = 1
     for i = 1, #instance_name do
         if instance_name:sub(i, i) == search_term:sub(search_index, search_index) then
@@ -141,11 +143,8 @@ local function server_select_gui(player)
         button.style.horizontally_stretchable = true
     end
 
-    -- Move focus to the current server if not currently searching anything
-    if not global.server_select.search_terms[player.index] then
-        scroll.scroll_to_element(scroll["server_select-instance-" .. this_instance.id], "top-third")
-    else
-        -- Move focus to search field
+    -- Move focus to search field if the user is searching for something
+    if global.server_select.search_terms[player.index] then
         search_field.focus()
     end
 end
@@ -166,12 +165,6 @@ local function on_gui_text_changed(event)
                         child.visible = search_matches(child.caption, event.element.text)
                     end
                 end
-            end
-        end
-        -- Move focus to the current server if the search field is empty
-        if event.element.text == "" then
-            if gui then
-                gui["server_select-scroll"].scroll_to_element(scroll["server_select-instance-" .. get_this_instance().id], "top-third")
             end
         end
     end
